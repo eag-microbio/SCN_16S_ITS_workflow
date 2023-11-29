@@ -1,10 +1,5 @@
 # SCN 16S
 ---
-title: "LTR16S_S3ARS_Markdown"
-author: "Emily Green"
-date: "2023-11-02"
-output: html_document
----
 ## Import data & assemble
 
 ### Run DADA2
