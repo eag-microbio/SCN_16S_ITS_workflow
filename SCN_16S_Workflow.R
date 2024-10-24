@@ -1,5 +1,5 @@
-#Emily A. Green, PhD. 
-#Code for 16S data, includes metaphlan taxonomy for cyst metagenomes and kraken2 taxonomy for cyst and soil metagenomes 
+# Emily A. Green, PhD. 
+# Code for 16S data, includes metaphlan taxonomy for cyst metagenomes and kraken2 taxonomy for cyst and soil metagenomes 
 
 #16S Cyst samples that are not present in the cyst metagenome were removed
 #All S1 samples were removed
@@ -7,12 +7,12 @@
 #This code reflects being run in the /workdir/eag252/LTR_16S_Metagenome/ directory.
 #If being run in the "storage" directory, file paths will likely need to be updated. 
 
-#dada2 processing-----
+## dada2 processing-----
 library(dada2)
 path <- "/workdir/eag252/LTR_16S_Metagenome/"
 list.files(path)
 
-# Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
+#### Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
 fnFs <- sort(list.files(path, pattern="_R1_001.fastq", full.names = TRUE))
 fnRs <- sort(list.files(path, pattern="_R2_001.fastq", full.names = TRUE))
 # Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
