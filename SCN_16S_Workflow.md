@@ -2852,15 +2852,14 @@ plot(analyze_ps4.SS_spiec, labelScale = TRUE, cexNodes = 2, labelFont = 3, rmSin
 
 
 ## ANCOM-BC- making a dataset with the same thresholds as the top taxa 
-#Make a phyloseq object with the same taxa that are included in abundance thresholds. 
+#### Make a phyloseq object with the same taxa that are included in abundance thresholds. 
 
 #Cysts = 2% or higher, Soils = 1% or higher, Roots = 2% or higher. 
 
+#### Cysts
 pscyst.rab <- transform_sample_counts(pscyst, function(x) x/sum(x))
 
 filter.pscyst.rab <- phyloseq::genefilter_sample(pscyst.rab, filterfun_sample(function(x) x / sum(x) > .02))
-
-#pull from the non relative abundance bulk file
 
 forancom.filter.pscyst <- prune_taxa(filter.pscyst.rab, pscyst)
 
@@ -2870,19 +2869,18 @@ filter.pscystmid.rab <- phyloseq::genefilter_sample(pscystmid.rab, filterfun_sam
 
 forancom.filter.pscystmid <- prune_taxa(filter.pscystmid.rab, pscystmid)
 
-
 pscystfall.rab <- transform_sample_counts(pscystfall, function(x) x/sum(x))
 
 filter.pscystfall.rab <- phyloseq::genefilter_sample(pscystfall.rab, filterfun_sample(function(x) x / sum(x) > .02))
 
 forancom.filter.pscystfall <- prune_taxa(filter.pscystfall.rab, pscystfall)
 
+#### Bulk soil
+#pull from the non relative abundance bulk file
 
 psbulk.rab <- transform_sample_counts(psbulk, function(x) x/sum(x))
 
 filter.psbulk.rab <- phyloseq::genefilter_sample(psbulk.rab, filterfun_sample(function(x) x / sum(x) > .01))
-
-#pull from the non relative abundance bulk file
 
 forancom.filter.psbulk <- prune_taxa(filter.psbulk.rab, psbulk)
 
@@ -2900,13 +2898,15 @@ filter.psbulkfall.rab <- phyloseq::genefilter_sample(psbulkfall.rab, filterfun_s
 
 forancom.filter.psbulkfall <- prune_taxa(filter.psbulkfall.rab, psbulkfall)
 
-
+#### Rhizosphere
 psrhiz.rab <- transform_sample_counts(psrhiz, function(x) x/sum(x))
 
 filter.psrhiz.rab <- phyloseq::genefilter_sample(psrhiz.rab, filterfun_sample(function(x) x / sum(x) > .01))
 
 forancom.filter.psrhiz <- prune_taxa(filter.psrhiz.rab, psrhiz)
 
+
+#### Roots
 psroot.rab <- transform_sample_counts(psroot, function(x) x/sum(x))
 
 filter.psroot.rab <- phyloseq::genefilter_sample(psroot.rab, filterfun_sample(function(x) x / sum(x) > .02))
@@ -2914,7 +2914,7 @@ filter.psroot.rab <- phyloseq::genefilter_sample(psroot.rab, filterfun_sample(fu
 forancom.filter.psroot <- prune_taxa(filter.psroot.rab, psroot)
 
 
-
+### Make phyloseq object with each of the specific sample cutoffs
 #Ps5 has abundance cut offs for each sample! 
 
 ps5 <- merge_phyloseq(forancom.filter.pscyst, forancom.filter.psbulk, forancom.filter.psrhiz, forancom.filter.psroot)
@@ -2926,49 +2926,64 @@ testancombc.ps5 <- ancombc2(ps5 ,assay_name = "counts", tax_level = "Genus", fix
 
 #### Bulk as comparison
 sample_data(ps5)$Sample_Type <- as.factor(sample_data(ps5)$Sample_Type)
+
 ancombc.bulk <- ancombc2(ps5 ,assay_name = "counts", tax_level = "Genus", fix_formula = "Sample_Type",
                          group = "Sample_Type", n_cl = 8, global = TRUE)
+
 res.bulk = ancombc.bulk$res
+
 res.bulk_global = ancombc.bulk$res_global
 
 
 #### Cyst 
 sample_data(ps5)$Sample_Type <- relevel(sample_data(ps5)$Sample_Type, "Cyst")
+
 ancombc.cyst <- ancombc2(ps5 ,assay_name = "counts", tax_level = "Genus", fix_formula = "Sample_Type",
                          group = "Sample_Type", n_cl = 8, global = TRUE)
+
 res.cyst = ancombc.cyst$res
+
 res.cyst_global = ancombc.cyst$res_global
 
 
 #### Rhizosphere
 sample_data(ps5)$Sample_Type <- relevel(sample_data(ps5)$Sample_Type, "Rhizosphere")
+
 ancombc.rhiz <- ancombc2(ps5 ,assay_name = "counts", tax_level = "Genus", fix_formula = "Sample_Type",
                          group = "Sample_Type", n_cl = 8, global = TRUE)
+
 res.rhiz = ancombc.rhiz$res
+
 res.rhiz_global = ancombc.rhiz$res_global
 
 
 #### Root
 sample_data(ps5)$Sample_Type <- relevel(sample_data(ps5)$Sample_Type, "Roots")
+
 ancombc.root <- ancombc2(ps5 ,assay_name = "counts", tax_level = "Genus", fix_formula = "Sample_Type",
                          group = "Sample_Type", n_cl = 8, global = TRUE)
+
 res.root = ancombc.root$res
+
 res.root_global = ancombc.root$res_global
 
-
-
+##### export results
 write.csv(res.bulk, "res.bulk.csv")
 write.csv(res.cyst, "res.cyst.csv")
 write.csv(res.rhiz, "res.rhiz.csv")
 write.csv(res.root, "res.root.csv")
 
-#Using the res.cyst.csv 
-#Removed anything that was false across all treatments and saved as filt.rest.cyst.csv
+### View cyst ancom results
+#Using the res.cyst.csv. Removed anything that was false across all treatments and saved as filt.rest.cyst.csv. 
+
 #made 3 csv files that have the 4 columns. Genera, lfc T or F values, lfc number values, and the Cyst vs a sample type
+
 #I can merge these files now to make a dataframe and try a heatmap? 
 
 cvb <- read.csv("cystvsbulk.csv")
+
 cvrh <- read.csv("cystvsrhiz.csv")
+
 cvr <- read.csv("cystvsroot.csv")
 
 cystvsall.ancom.df <- rbind(cvb, cvrh, cvr)
@@ -2978,11 +2993,14 @@ ggplot(cystvsall.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_til
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Cysts vs All Ancom.pdf"
 
-#bulk
+### View bulk soil ancom results
 bvc <- read.csv("bulkvscyst.csv")
+
 bvrh <- read.csv("bulkvsrhiz.csv")
+
 bvr <- read.csv("bulkvsroot.csv")
 
 bulkvsall.ancom.df <- rbind(bvc, bvrh, bvr)
@@ -2992,11 +3010,14 @@ ggplot(bulkvsall.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_til
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Bulk vs All Ancom.pdf"
 
-#rhiz
+### View Rhiz ancom results
 rhvb <- read.csv("rhizvsbulk.csv")
+
 rhvc <- read.csv("rhizvscyst.csv")
+
 rhvr <- read.csv("rhizvsroot.csv")
 
 rhizvsall.ancom.df <- rbind(rhvb, rhvc, rhvr)
@@ -3006,11 +3027,14 @@ ggplot(rhizvsall.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_til
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Rhiz vs All Ancom.pdf"
 
-#roots
+### View Roots ancom results
 rvb <- read.csv("rootvsbulk.csv")
+
 rvc <- read.csv("rootvscyst.csv")
+
 rvrh <- read.csv("rootvsrhiz.csv")
 
 rootvsall.ancom.df <- rbind(rvb, rvc, rvrh)
@@ -3020,9 +3044,11 @@ ggplot(rootvsall.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_til
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Roots vs All Ancom.pdf"
 
-#all sample types & comparisons in one.
+
+### View all sample types & comparisons in one.
 all.ancom.df <- rbind(cystvsall.ancom.df, bulkvsall.ancom.df, rhizvsall.ancom.df, rootvsall.ancom.df)
 
 ggplot(all.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(color = "black", 
@@ -3030,13 +3056,13 @@ ggplot(all.ancom.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(colo
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "All Ancom in one plot.pdf"
 
-#break
 
-#ANCOM-BC- Entire dataset, compare treatments- nothing was significant ---- 
+## ANCOM-BC- Entire dataset, compare treatments- nothing was significant  
 
-#S3
+## S3
 sample_data(ps5)$Plot <- as.factor(sample_data(ps5)$Plot)
 sample_data(ps5)$Plot <- relevel(sample_data(ps5)$Plot, "S3")
 ancombc.ps5.S3 <- ancombc2(ps5, assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
@@ -3044,21 +3070,21 @@ ancombc.ps5.S3 <- ancombc2(ps5, assay_name = "counts", tax_level = "Genus", fix_
 res.ps5.S3 = ancombc.ps5.S3$res
 
 
-#Sa
+## Sa
 sample_data(ps5)$Plot <- relevel(sample_data(ps5)$Plot, "Sa")
 ancombc.ps5.Sa <- ancombc2(ps5, assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 res.ps5.Sa = ancombc.ps5.Sa$res
 
 
-#Sr
+## Sr
 sample_data(ps5)$Plot <- relevel(sample_data(ps5)$Plot, "Sr")
 ancombc.ps5.Sr <- ancombc2(ps5, assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 res.ps5.Sr = ancombc.ps5.Sr$res
 
 
-#Ss
+## Ss
 sample_data(ps5)$Plot <- relevel(sample_data(ps5)$Plot, "Ss")
 ancombc.ps5.Ss <- ancombc2(ps5, assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
@@ -3069,60 +3095,81 @@ write.csv(res.ps5.Sa, "res.ps5.SA.csv")
 write.csv(res.ps5.Sr, "res.ps5.SR.csv")
 write.csv(res.ps5.Ss, "res.ps5.SS.csv")
 
-#break
 
-
-#ANCOM-BC- Just cysts- compare the treatments ---- 
+## ANCOM-BC- Just cysts- compare the treatments  
 #Just cysts- compare treatments
 
 #using the filtered phyloseq object of cysts
+
 forancom.filter.pscyst
 
+### S3 cysts
+
 sample_data(forancom.filter.pscyst)$Plot <- as.factor(sample_data(forancom.filter.pscyst)$Plot)
+
 sample_data(forancom.filter.pscyst)$Plot <- relevel(sample_data(forancom.filter.pscyst)$Plot, "S3")
+
 ancombc.cystS3 <- ancombc2(forancom.filter.pscyst ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
 res.cystS3 = ancombc.cystS3$res
+
 write.csv(res.cystS3, "res.cystS3.csv")
 
-#Sa
+### Sa cysts
 sample_data(forancom.filter.pscyst)$Plot <- relevel(sample_data(forancom.filter.pscyst)$Plot, "Sa")
+
 ancombc.cystSA <- ancombc2(forancom.filter.pscyst ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystSA = ancombc.cystSA$res
+
 write.csv(res.cystSA, "res.cystSA.csv")
 
-#Sr
+### Sr cysts 
 sample_data(forancom.filter.pscyst)$Plot <- relevel(sample_data(forancom.filter.pscyst)$Plot, "Sr")
+
 ancombc.cystSR <- ancombc2(forancom.filter.pscyst ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystSR = ancombc.cystSR$res
+
 write.csv(res.cystSR, "res.cystSR.csv")
 
-#Ss
+### Ss cysts 
 sample_data(forancom.filter.pscyst)$Plot <- relevel(sample_data(forancom.filter.pscyst)$Plot, "Ss")
+
 ancombc.cystSS <- ancombc2(forancom.filter.pscyst ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
+
 res.cystSS = ancombc.cystSS$res
+
 write.csv(res.cystSS, "res.cystSS.csv")
 
-
+### View Cysts results 
 #Removed anything that was false across all treatments and saved as filt.rest.cyst.csv
+
 #made new csv files that have the 4 columns: Genera, lfc T or F values, lfc number values, and the Cyst vs a sample type
+
 #I can merge these files now to make a dataframe and try a heatmap 
 
 cyst.savs3 <- read.csv("cystSAvcystS3.csv")
+
 cyst.savsr <- read.csv("cystSAvcystSR.csv")
+
 cyst.savss <- read.csv("cystSAvcystSS.csv")
 
 cyst.srvs3 <- read.csv("cystSRvcystS3.csv")
+
 cyst.srvsa <- read.csv("cystSRvcystSA.csv")
+
 cyst.srvss <- read.csv("cystSRvcystSS.csv")
 
 cyst.ssvs3 <- read.csv("cystSSvcystS3.csv")
+
 cyst.ssvsa <- read.csv("cystSSvcystSA.csv")
+
 cyst.ssvsr <- read.csv("cystSSvcystSR.csv")
 
 ancom.cyst.savall.df <- rbind(cyst.savs3, cyst.savsr, cyst.savss)
@@ -3131,7 +3178,6 @@ ancom.cyst.srvall.df <- rbind(cyst.srvs3, cyst.srvsa, cyst.srvss)
 
 ancom.cyst.ssvall.df <- rbind(cyst.ssvs3, cyst.ssvsa, cyst.ssvsr)
 
-
 ancom.cyst.df <- rbind(ancom.cyst.savall.df, ancom.cyst.srvall.df, ancom.cyst.ssvall.df)
 
 ggplot(ancom.cyst.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(color = "black", 
@@ -3139,58 +3185,83 @@ ggplot(ancom.cyst.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(col
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+          
 #Saved as "Ancom Cyst- merged treatments.pdf"
 
-#break
 
 
-#ANCOM-BC- Just mid season cysts- compare the treatments ---- 
+## ANCOM-BC- Just mid season cysts- compare the treatments  
 #using the filtered phyloseq object of cysts
+
 forancom.filter.pscystmid 
 
+### S3 mid
 sample_data(forancom.filter.pscystmid)$Plot <- as.factor(sample_data(forancom.filter.pscystmid)$Plot)
+
 sample_data(forancom.filter.pscystmid)$Plot <- relevel(sample_data(forancom.filter.pscystmid)$Plot, "S3")
+
 ancombc.cystmidS3 <- ancombc2(forancom.filter.pscystmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
 
+
 res.cystmidS3 = ancombc.cystmidS3$res
+
 #write.csv(res.cystmidS3, "res.cystmidS3.csv")
+
 #Copied from dataframe into an excel sheet to save time.
 
-#Sa
+### Sa mid
 sample_data(forancom.filter.pscystmid)$Plot <- relevel(sample_data(forancom.filter.pscystmid)$Plot, "Sa")
+
 ancombc.cystmidSA <- ancombc2(forancom.filter.pscystmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystmidSA = ancombc.cystmidSA$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystmidSA, "res.cystmidSA.csv")
 
-#Sr
+### Sr mid
 sample_data(forancom.filter.pscystmid)$Plot <- relevel(sample_data(forancom.filter.pscystmid)$Plot, "Sr")
+
 ancombc.cystmidSR <- ancombc2(forancom.filter.pscystmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystmidSR = ancombc.cystmidSR$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystmidSR, "res.cystmidSR.csv")
 
-#Ss
+### Ss mid
 sample_data(forancom.filter.pscystmid)$Plot <- relevel(sample_data(forancom.filter.pscystmid)$Plot, "Ss")
+
 ancombc.cystmidSS <- ancombc2(forancom.filter.pscystmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
 
+
 res.cystmidSS = ancombc.cystmidSS$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystmidSS, "res.cystmidSS.csv")
 
+### View Cyst Mid Results
 #Removed anything that was false across all treatments
+
 #made new csv files that have the 4 columns: Genera, lfc T or F values, lfc number values, and the sample vs sample 
+
 #I can merge these files now to make a dataframe and try a heatmap 
 
 cystmid.s3vsa <- read.csv("cystmidS3vcystmidSA.csv")
+
 cystmid.s3vsr <- read.csv("cystmidS3vcystmidSR.csv")
 
+
 cystmid.savs3 <- read.csv("cystmidSAvcystmidS3.csv")
+
 cystmid.savsr <- read.csv("cystmidSAvcystmidSR.csv")
+
 cystmid.savss <- read.csv("cystmidSAvcystmidSS.csv")
 
+
 cystmid.srvs3 <- read.csv("cystmidSRvcystmidS3.csv")
+
 cystmid.srvsa <- read.csv("cystmidSRvcystmidSA.csv")
 
 cystmid.ssvsa <- read.csv("cystmidSSvcystmidSA.csv")
@@ -3212,49 +3283,64 @@ ggplot(ancom.cystmid.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
 #Saved as "Ancom Cyst Mid- merge treatments.pdf"
 
-#break
 
 
-#ANCOM-BC- Just fall season cysts- compare the treatments ---- 
+## ANCOM-BC- Just fall season cysts- compare the treatments  
 #using the filtered phyloseq object of cysts
+
 forancom.filter.pscystfall 
 
+### S3 fall
 sample_data(forancom.filter.pscystfall)$Plot <- as.factor(sample_data(forancom.filter.pscystfall)$Plot)
+
 sample_data(forancom.filter.pscystfall)$Plot <- relevel(sample_data(forancom.filter.pscystfall)$Plot, "S3")
+
 ancombc.cystfallS3 <- ancombc2(forancom.filter.pscystfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
 
 res.cystfallS3 = ancombc.cystfallS3$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystfallS3, "res.cystfallS3.csv")
 
-#Sa
+### Sa fall
 sample_data(forancom.filter.pscystfall)$Plot <- relevel(sample_data(forancom.filter.pscystfall)$Plot, "Sa")
+
 ancombc.cystfallSA <- ancombc2(forancom.filter.pscystfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystfallSA = ancombc.cystfallSA$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystfallSA, "res.cystfallSA.csv")
 
-#Sr
+### Sr fall
 sample_data(forancom.filter.pscystfall)$Plot <- relevel(sample_data(forancom.filter.pscystfall)$Plot, "Sr")
+
 ancombc.cystfallSR <- ancombc2(forancom.filter.pscystfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
+
 res.cystfallSR = ancombc.cystfallSR$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystfallSR, "res.cystfallSR.csv")
 
-#Ss
+### Ss fall
 sample_data(forancom.filter.pscystfall)$Plot <- relevel(sample_data(forancom.filter.pscystfall)$Plot, "Ss")
+
 ancombc.cystfallSS <- ancombc2(forancom.filter.pscystfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
 
 res.cystfallSS = ancombc.cystfallSS$res
+
 #Copied from dataframe into an excel sheet to save time.  write.csv(res.cystfallSS, "res.cystfallSS.csv")
 
-
+### View Cyst Fall results
 #Removed anything that was false across all treatments
+
 #made new csv files that have the 4 columns: Genera, lfc T or F values, lfc number values, and the sample vs sample 
+
 #I can merge these files now to make a dataframe and try a heatmap 
 
 cystfall.savsr <- read.csv("cystfallSAvcystfallSR.csv")
+
 cystfall.savss <- read.csv("cystfallSAvcystfallSS.csv")
 
 cystfall.srvsa <- read.csv("cystfallSRvcystfallSA.csv")
@@ -3271,18 +3357,19 @@ ggplot(ancom.cystfall.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
 #Saved as "Ancom Cyst Fall- merged treatments.pdf"
 
-#break
 
-#ANCOM-BC- Just Cyst- compare seasons ---- 
-
+## ANCOM-BC- Just Cyst- compare seasons  
 ancombc.cyst.season <- ancombc2(forancom.filter.pscyst, assay_name = "counts", tax_level = "Genus", fix_formula = "Season",
                                 group = "Season", n_cl = 8, global = TRUE)
 
 res.cyst.season = ancombc.cyst.season$res
+
 write.csv(res.cyst.season, "res.cyst.season.csv")
 
 #Removed anything that was false across all treatments
+
 #made new csv files that have the 4 columns: Genera, lfc T or F values, lfc number values, and the sample vs sample 
+
 #I can merge these files now to make a dataframe and try a heatmap 
 
 ancom.cyst.season <- read.csv("cyst.season.csv")
@@ -3294,84 +3381,111 @@ ggplot(ancom.cyst.season, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
 #Saved as "Ancom- Cysts- seasons.pdf"
 
-#break
 
-#ANCOM-BC- Just bulk- compare the treatments- Nothing was significant! ---- 
+
+## ANCOM-BC- Just bulk- compare the treatments- Nothing was significant!  
 forancom.filter.psbulk
 
 sample_data(forancom.filter.psbulk)$Plot <- as.factor(sample_data(forancom.filter.psbulk)$Plot)
+
 sample_data(forancom.filter.psbulk)$Plot <- relevel(sample_data(forancom.filter.psbulk)$Plot, "S3")
+
 ancombc.bulkS3 <- ancombc2(forancom.filter.psbulk ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
 res.bulkS3 = ancombc.bulkS3$res
+
 #write.csv(res.bulkS3, "res.bulkS3.csv")
 
 #Sa
 sample_data(forancom.filter.psbulk)$Plot <- relevel(sample_data(forancom.filter.psbulk)$Plot, "Sa")
+
 ancombc.bulkSA <- ancombc2(forancom.filter.psbulk ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.bulkSA = ancombc.bulkSA$res
+
 #write.csv(res.bulkSA, "res.bulkSA.csv")
 
 #Sr
 sample_data(forancom.filter.psbulk)$Plot <- relevel(sample_data(forancom.filter.psbulk)$Plot, "Sr")
+
 ancombc.bulkSR <- ancombc2(forancom.filter.psbulk ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.bulkSR = ancombc.bulkSR$res
+
 #write.csv(res.bulkSR, "res.bulkSR.csv")
 
 #Ss
 sample_data(forancom.filter.psbulk)$Plot <- relevel(sample_data(forancom.filter.psbulk)$Plot, "Ss")
+
 ancombc.bulkSS <- ancombc2(forancom.filter.psbulk ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
 res.bulkSS = ancombc.bulkSS$res
+
 #write.csv(res.bulkSS, "res.bulkSS.csv")
 
 #Nothing was significant!
 
-#break
 
-#ANCOM-BC- Just mid bulk- compare the treatments ----
+
+## ANCOM-BC- Just mid bulk- compare the treatments 
 forancom.filter.psbulkmid <- subset_samples(forancom.filter.psbulk, Season == "Mid")
 
+### S3 mid 
 sample_data(forancom.filter.psbulkmid)$Plot <- as.factor(sample_data(forancom.filter.psbulkmid)$Plot)
+
 sample_data(forancom.filter.psbulkmid)$Plot <- relevel(sample_data(forancom.filter.psbulkmid)$Plot, "S3")
+
 ancombc.bulkmidS3 <- ancombc2(forancom.filter.psbulkmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
 
 res.bulkmidS3 = ancombc.bulkmidS3$res
+
 #Copied from dataframe into an excel sheet to save time. write.csv(res.bulkmidS3, "res.bulkmidS3.csv")
 
-#Sa
+### Sa mid
 sample_data(forancom.filter.psbulkmid)$Plot <- relevel(sample_data(forancom.filter.psbulkmid)$Plot, "Sa")
+
 ancombc.bulkmidSA <- ancombc2(forancom.filter.psbulkmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
+
 res.bulkmidSA = ancombc.bulkmidSA$res
+
 #Copied from dataframe into an excel sheet to save time. write.csv(res.bulkmidSA, "res.bulkmidSA.csv")
 
-#Sr
+### Sr mid
 sample_data(forancom.filter.psbulkmid)$Plot <- relevel(sample_data(forancom.filter.psbulkmid)$Plot, "Sr")
+
 ancombc.bulkmidSR <- ancombc2(forancom.filter.psbulkmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
+
 res.bulkmidSR = ancombc.bulkmidSR$res
+
 #Copied from dataframe into an excel sheet to save time. write.csv(res.bulkmidSR, "res.bulkmidSR.csv")
 
-#Ss
+### Ss mid
 sample_data(forancom.filter.psbulkmid)$Plot <- relevel(sample_data(forancom.filter.psbulkmid)$Plot, "Ss")
+
 ancombc.bulkmidSS <- ancombc2(forancom.filter.psbulkmid ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                               group = "Plot", n_cl = 8, global = TRUE)
 
 res.bulkmidSS = ancombc.bulkmidSS$res
+
 #Copied from dataframe into an excel sheet to save time. write.csv(res.bulkmidSS, "res.bulkmidSS.csv")
 
-
+### View Bulk mid results 
 bulkmid.s3vsa <- read.csv("bulkmidS3vbulkmidSA.csv")
 
+
 bulkmid.savs3 <- read.csv("bulkmidSAvbulkmidS3.csv")
+
 bulkmid.savsr <- read.csv("bulkmidSAvbulkmidSR.csv")
+
 bulkmid.savss <- read.csv("bulkmidSAvbulkmidSS.csv")
+
 
 bulkmid.srvsa <- read.csv("bulkmidSRvbulkmidSA.csv")
 
@@ -3383,6 +3497,7 @@ ggplot(bulkmid.s3vsa, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(col
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Bulk Mid S3 vs all.pdf"
 
 ancom.bulkmid.savall.df <- rbind(bulkmid.savs3, bulkmid.savsr, bulkmid.savss)
@@ -3392,6 +3507,7 @@ ggplot(ancom.bulkmid.savall.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geo
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Bulk Mid SA vs all.pdf"
 
 ggplot(bulkmid.srvsa, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(color = "black", 
@@ -3399,6 +3515,7 @@ ggplot(bulkmid.srvsa, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(col
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Bulk Mid SR vs all.pdf"
 
 ggplot(bulkmid.ssvsa, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(color = "black", 
@@ -3406,6 +3523,7 @@ ggplot(bulkmid.ssvsa, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(col
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Bulk Mid SS vs all.pdf"
 
 
@@ -3416,52 +3534,66 @@ ggplot(ancom.bulkmid.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom Bulk Mid- merged treatments.pdf"
 
-#break 
 
 
-#ANCOM-BC- Just fall bulk- compare the treatments NONE ARE SIGNIFICANT ----
+## ANCOM-BC- Just fall bulk- compare the treatments NONE ARE SIGNIFICANT 
 forancom.filter.psbulkfall <- subset_samples(forancom.filter.psbulk, Season == "Fall")
-
+### S3 
 sample_data(forancom.filter.psbulkfall)$Plot <- as.factor(sample_data(forancom.filter.psbulkfall)$Plot)
+
 sample_data(forancom.filter.psbulkfall)$Plot <- relevel(sample_data(forancom.filter.psbulkfall)$Plot, "S3")
+
 ancombc.bulkfallS3 <- ancombc2(forancom.filter.psbulkfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
 
 res.bulkfallS3 = ancombc.bulkfallS3$res
+
 #write.csv(res.bulkfallS3, "res.bulkfallS3.csv")
 
-#Sa
+
+### Sa
 sample_data(forancom.filter.psbulkfall)$Plot <- relevel(sample_data(forancom.filter.psbulkfall)$Plot, "Sa")
+
 ancombc.bulkfallSA <- ancombc2(forancom.filter.psbulkfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
+
 res.bulkfallSA = ancombc.bulkfallSA$res
+
 #write.csv(res.bulkfallSA, "res.bulkfallSA.csv")
 
-#Sr
+
+### Sr
 sample_data(forancom.filter.psbulkfall)$Plot <- relevel(sample_data(forancom.filter.psbulkfall)$Plot, "Sr")
+
 ancombc.bulkfallSR <- ancombc2(forancom.filter.psbulkfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
 res.bulkfallSR = ancombc.bulkfallSR$res
+
 #write.csv(res.bulkfallSR, "res.bulkfallSR.csv")
 
-#Ss
+
+### Ss
 sample_data(forancom.filter.psbulkfall)$Plot <- relevel(sample_data(forancom.filter.psbulkfall)$Plot, "Ss")
+
 ancombc.bulkfallSS <- ancombc2(forancom.filter.psbulkfall ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                                group = "Plot", n_cl = 8, global = TRUE)
 
+
 res.bulkfallSS = ancombc.bulkfallSS$res
+
 #write.csv(res.bulkfallSS, "res.bulkfallSS.csv")
 
-#break
 
-#ANCOM-BC- Just Bulk- compare seasons ---- 
 
+## ANCOM-BC- Just Bulk- compare seasons  
 ancombc.bulk.season <- ancombc2(forancom.filter.psbulk, assay_name = "counts", tax_level = "Genus", fix_formula = "Season",
                                 group = "Season", n_cl = 8, global = TRUE)
 
 res.bulk.season = ancombc.bulk.season$res
+
 write.csv(res.bulk.season, "res.bulk.season.csv")
 
 ancom.bulk.season <- read.csv("bulk.season.csv")
@@ -3471,53 +3603,75 @@ ggplot(ancom.bulk.season, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Bulk- seasons.pdf"
 
-#break
 
-#ANCOM-BC- Just rhiz- compare the treatments ---- 
+
+## ANCOM-BC- Just rhiz- compare the treatments  
 forancom.filter.psrhiz
 
+### S3
 sample_data(forancom.filter.psrhiz)$Plot <- as.factor(sample_data(forancom.filter.psrhiz)$Plot)
+
 sample_data(forancom.filter.psrhiz)$Plot <- relevel(sample_data(forancom.filter.psrhiz)$Plot, "S3")
+
 ancombc.rhizS3 <- ancombc2(forancom.filter.psrhiz ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
 res.rhizS3 = ancombc.rhizS3$res
+
 write.csv(res.rhizS3, "res.rhizS3.csv")
 
-#Sa
+### Sa
 sample_data(forancom.filter.psrhiz)$Plot <- relevel(sample_data(forancom.filter.psrhiz)$Plot, "Sa")
+
 ancombc.rhizSA <- ancombc2(forancom.filter.psrhiz ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.rhizSA = ancombc.rhizSA$res
+
 #write.csv(res.rhizSA, "res.rhizSA.csv")
 
-#Sr
+### Sr
 sample_data(forancom.filter.psrhiz)$Plot <- relevel(sample_data(forancom.filter.psrhiz)$Plot, "Sr")
+
 ancombc.rhizSR <- ancombc2(forancom.filter.psrhiz ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
+
 res.rhizSR = ancombc.rhizSR$res
+
 write.csv(res.rhizSR, "res.rhizSR.csv")
 
-#Ss
+### Ss
 sample_data(forancom.filter.psrhiz)$Plot <- relevel(sample_data(forancom.filter.psrhiz)$Plot, "Ss")
+
 ancombc.rhizSS <- ancombc2(forancom.filter.psrhiz ,assay_name = "counts", tax_level = "Genus", fix_formula = "Plot",
                            group = "Plot", n_cl = 8, global = TRUE)
 
 res.rhizSS = ancombc.rhizSS$res
+
 write.csv(res.rhizSS, "res.rhizSS.csv")
 
+### View Rhizosphere results 
 rhiz.s3vsa <- read.csv("rhizS3vrhizSA.csv")
+
 rhiz.s3vsr <- read.csv("rhizS3vrhizSR.csv")
+
 rhiz.s3vss <- read.csv("rhizS3vrhizSS.csv")
 
+
 rhiz.srvs3 <- read.csv("rhizSRvrhizS3.csv")
+
 rhiz.srvsa <- read.csv("rhizSRvrhizSA.csv")
+
 rhiz.srvss <- read.csv("rhizSRvrhizSS.csv")
 
+
 rhiz.ssvs3 <- read.csv("rhizSSvrhizS3.csv")
+
 rhiz.ssvsa <- read.csv("rhizSSvrhizSA.csv")
+
 rhiz.ssvsr <- read.csv("rhizSSvrhizSR.csv")
 
 
@@ -3528,6 +3682,7 @@ ggplot(ancom.rhiz.s3vall.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_t
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom-Rhiz S3 vs All.pdf"
 
 ancom.rhiz.srvall.df <- rbind(rhiz.srvs3, rhiz.srvsa, rhiz.srvss)
@@ -3537,6 +3692,7 @@ ggplot(ancom.rhiz.srvall.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_t
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Rhiz SR vs All.pdf"
 
 ancom.rhiz.ssvall.df <- rbind(rhiz.ssvs3, rhiz.ssvsa, rhiz.ssvsr)
@@ -3546,6 +3702,7 @@ ggplot(ancom.rhiz.ssvall.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_t
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom- Rhiz SS vs All.pdf"
 
 ancom.rhiz.df <- rbind(ancom.rhiz.s3vall.df, ancom.rhiz.srvall.df, ancom.rhiz.ssvall.df)
@@ -3555,14 +3712,16 @@ ggplot(ancom.rhiz.df, aes(x= lfc_TF,y= Genus, fill = lfc_value)) + geom_tile(col
           panel.background = element_rect(fill = "grey"), axis.text.y.left = element_text(size = 12),
           strip.text.x.top = element_text(size = 10)) + facet_grid(~Sample_vs, scales = "free", space = "free"
           ) + scale_fill_gradient2(low = "red", mid = "white", high = "blue")
+
 #Saved as "Ancom Rhiz- merged treatments.pdf"
 
-#break
 
-#ANCOM-BC- Just roots- compare the treatments-- nothing was significant---- 
+
+## ANCOM-BC- Just roots- compare the treatments-- nothing was significant 
 
 forancom.filter.psroot
 
+## S3
 sample_data(forancom.filter.psroot)$Plot <- as.factor(sample_data(forancom.filter.psroot)$Plot)
 
 sample_data(forancom.filter.psroot)$Plot <- relevel(sample_data(forancom.filter.psroot)$Plot, "S3")
@@ -3575,7 +3734,7 @@ res.rootS3 = ancombc.rootS3$res
 
 write.csv(res.rootS3, "res.rootsS3.csv")
 
-#Sa
+## Sa
 
 sample_data(forancom.filter.psroot)$Plot <- relevel(sample_data(forancom.filter.psroot)$Plot, "Sa")
 
@@ -3586,7 +3745,7 @@ res.rootSA = ancombc.rootSA$res
 
 write.csv(res.rootSA, "res.rootsSA.csv")
 
-#Sr
+## Sr
 
 sample_data(forancom.filter.psroot)$Plot <- relevel(sample_data(forancom.filter.psroot)$Plot, "Sr")
 
@@ -3597,7 +3756,7 @@ res.rootSR = ancombc.rootSR$res
 
 write.csv(res.rootSR, "res.rootSR.csv")
 
-#Ss
+## Ss
 
 sample_data(forancom.filter.psroot)$Plot <- relevel(sample_data(forancom.filter.psroot)$Plot, "Ss")
 
@@ -3609,4 +3768,4 @@ res.rootSS = ancombc.rootSS$res
 write.csv(res.rootsSS, "res.rootsSS.csv")
 
 #nothing was significant! 
-#break
+
