@@ -180,712 +180,961 @@ plot_richness(ps1, x="SampleType", measures=c("Shannon", "Simpson"), color="Samp
 
 ## Remove samples with less than 100 reads
 ps2 <- prune_samples(sample_sums(ps1) > 100, ps1)
+
 View(sample_sums(ps2))
+
 View(sample_data(ps2))
 
 ## Beta Diversity- Unifrac- all samples, negative controls & mock community 
 ps2t <- ps2
-#Unifrac
+
+### Unifrac
 ps2t.tree <- rtree(ntaxa(ps2t), rooted = TRUE, tip.label = taxa_names(ps2t))
+
 #plot(ps2t.tree)
+
 ps2t <- merge_phyloseq(ps2t, ps2t.tree)
 
-#Unweighted
+### Unweighted
 ps2tunifrac_dist <- phyloseq::distance(ps2t, method="unifrac", weighted=F)
+
 ordination = ordinate(ps2t, method="PCoA", distance=ps2tunifrac_dist)
+
 plot_ordination(ps2t, ordination, color = "Sample_or_Control", shape = "Sample_Type") + theme(aspect.ratio=1)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 ps2t.tree.data <- data.frame(sample_data(ps2t))
+
 adonis2(ps2tunifrac_dist ~SampleType*Sample_or_Control, ps2t.tree.data)
 
-#Weighted
+### Weighted
 ps2tunifrac_dist <- phyloseq::distance(ps2t, method="unifrac", weighted=T)
+
 ordination = ordinate(ps2t, method="PCoA", distance=ps2tunifrac_dist)
+
 plot_ordination(ps2t, ordination, color = "Sample_or_Control", shape = "Sample_Type") + theme(aspect.ratio=1)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 ps2t.tree.data <- data.frame(sample_data(ps2t))
+
 adonis2(ps2tunifrac_dist ~SampleType*Sample_or_Control, ps2t.tree.data)
 
 
-
-#Remove negative controls & mock communities 
+## Remove negative controls & mock communities 
 ps3 <- subset_samples(ps2, Sample_or_Control == "Sample")
+
 View(sample_data(ps3))
 
-#Beta Diversity- Unifrac- All samples with no negative controls/mock community 
+## Beta Diversity- Unifrac- All samples with no negative controls/mock community 
 ps3t <- ps3
-#Unifrac
+
+### Unifrac
 ps3t.tree <- rtree(ntaxa(ps3t), rooted = TRUE, tip.label = taxa_names(ps3t))
+
 #plot(ps3t.tree)
+
 ps3t <- merge_phyloseq(ps3t, ps3t.tree)
 
-#Unweighted
+### Unweighted
 ps3tunifrac_dist <- phyloseq::distance(ps3t, method="unifrac", weighted=F)
+
 ordination = ordinate(ps3t, method="PCoA", distance=ps3tunifrac_dist)
+
 plot_ordination(ps3t, ordination, color = "Sample_Type", shape = "Season") + theme(aspect.ratio=1
 )+ geom_point(size = 2)+ scale_color_manual(values = c("Bulk soil" = "#F8766D", "Roots" = "#7CAE00", "Cyst" = "#C77CFF", "Rhizosphere" = "#00BFC4"))
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 ps3t.tree.data <- data.frame(sample_data(ps3t))
+
 adonis2(ps3tunifrac_dist ~Sample_Type*Season*Plot, ps3t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(ps3tunifrac_dist, ps3t.tree.data$Sample_Type, p.adjust.m = "holm", perm = 9999)
 
 pairwiseAdonis::pairwise.adonis(ps3tunifrac_dist, ps3t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 ps3tu.bdisper <- betadisper(ps3tunifrac_dist, ps3t.tree.data$Sample_Type, "centroid", bias.adjust = TRUE)
+
 anova(ps3tu.bdisper)
+
 permutest(ps3tu.bdisper, pairwise = TRUE)
 
 
-
-#Weighted
+### Weighted
 ps3tunifrac_dist <- phyloseq::distance(ps3t, method="unifrac", weighted=T)
+
 ordination = ordinate(ps3t, method="PCoA", distance=ps3tunifrac_dist)
+
 plot_ordination(ps3t, ordination, color = "Sample_Type", shape = "Season") + theme(aspect.ratio=1
 )+ geom_point(size = 2) + scale_color_manual(values = c("Bulk soil" = "#F8766D", "Roots" = "#7CAE00", "Cyst" = "#C77CFF", "Rhizosphere" = "#00BFC4"))
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 ps3t.tree.data <- data.frame(sample_data(ps3t))
+
 adonis2(ps3tunifrac_dist ~Sample_Type*Season*Plot, ps3t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(ps3tunifrac_dist, ps3t.tree.data$Sample_Type, p.adjust.m = "holm", perm = 9999)
 
 pairwiseAdonis::pairwise.adonis(ps3tunifrac_dist, ps3t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 ps3tu.bdisper <- betadisper(ps3tunifrac_dist, ps3t.tree.data$Sample_Type, "centroid", bias.adjust = TRUE)
+
 anova(ps3tu.bdisper)
+
 permutest(ps3tu.bdisper, pairwise = TRUE)
 
 
-#Split all samples into separate phyloseq objects
+## Split all samples into separate phyloseq objects
 pssoil <- subset_samples(ps3, SampleType == "Soil")
+
 psbulk <- subset_samples(ps3, SoilType == "Bulk soil")
+
 psrhiz <- subset_samples(ps3, SoilType == "Rhizosphere")
+
 pscyst <- subset_samples(ps3, SampleType == "Cyst")
+
 psroot <- subset_samples(ps3, SampleType == "Roots")
 
 View(sample_data(pssoil))
+
 View(tax_table(pssoil))
 
 View(sample_data(pscyst))
+
 View(tax_table(pscyst))
 
 View(sample_data(psroot))
+
 View(tax_table(psroot))
 
 
-#Remove taxa with 0 reads from each of the individual sample type phyloseq objects----
+### Remove taxa with 0 reads from each of the individual sample type phyloseq objects
 #4500 taxa
+
 pssoil <- prune_taxa(taxa_sums(pssoil) > 0, pssoil)
+
 View(taxa_sums(pssoil))
+
 View(tax_table(pssoil))
+
 #removed ~500 taxa
 
 psbulk <- prune_taxa(taxa_sums(psbulk) > 0, psbulk)
+
 View(tax_table(psbulk))
+
 #remove 1055
 
 psrhiz <- prune_taxa(taxa_sums(psrhiz) > 0, psrhiz)
+
 View(tax_table(psrhiz))
+
 #removed 2821
 
 pscyst <- prune_taxa(taxa_sums(pscyst) > 0, pscyst)
+
 View(tax_table(pscyst))
+
 #removed ~4000 taxa
+
 
 psroot <- prune_taxa(taxa_sums(psroot) > 0, psroot)
+
 View(taxa_sums(psroot))
+
 View(tax_table(psroot))
+
 #removed ~4000 taxa
 
 
 
-#Alpha diversity: Observed, Shannon & Simpson
-#Need to split the shannon and simpson plots to view the box plots without the individual dots. 
-#https://stackoverflow.com/questions/73544659/geom-points-are-not-placed-on-the-boxplot
+## Alpha diversity: Observed, Shannon & Simpson
+#Need to split the shannon and simpson plots to view the box plots without the individual dots. https://stackoverflow.com/questions/73544659/geom-points-are-not-placed-on-the-boxplot
 
-#ps3 object- all samples
+### ps3 object- all samples
 ps3alpha <- estimate_richness(ps3, measures = c("Observed", "Shannon", "Simpson"))
+
 ps3alpha$Sample_Type <- sample_data(ps3)$Sample_Type
+
 ps3alpha$Plot <- sample_data(ps3)$Plot
+
 ps3alpha$Season <- sample_data(ps3)$Season
+
 ps3alpha$SoilType <- sample_data(ps3)$SoilType
 
 ggplot(ps3alpha, aes(x = Plot, y = Observed, color = Season)) + geom_boxplot()+ facet_grid(~Sample_Type, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 ps3alpha.sampletype <- aov(Observed ~Sample_Type, ps3alpha)
+
 anova(ps3alpha.sampletype)
+
 ps3alpha.season <- aov(Observed ~Season, ps3alpha)
+
 anova(ps3alpha.season)
+
 ps3alpha.plot <- aov(Observed ~Plot, ps3alpha)
+
 anova(ps3alpha.plot)
 
 ggplot(ps3alpha, aes(x = Plot, y = Shannon, color = Season)) + geom_boxplot()+ facet_grid(~Sample_Type, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 ps3alpha.sampletype <- aov(Shannon ~Sample_Type, ps3alpha)
+
 anova(ps3alpha.sampletype)
+
 ps3alpha.season <- aov(Shannon ~Season, ps3alpha)
+
 anova(ps3alpha.season)
+
 ps3alpha.plot <- aov(Shannon ~Plot, ps3alpha)
+
 anova(ps3alpha.plot)
 
 ggplot(ps3alpha, aes(x = Plot, y = Simpson, color = Season)) + geom_boxplot()+ facet_grid(~Sample_Type, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 ps3alpha.sampletype <- aov(Simpson ~Sample_Type, ps3alpha)
+
 anova(ps3alpha.sampletype)
+
 ps3alpha.season <- aov(Simpson ~Season, ps3alpha)
+
 anova(ps3alpha.season)
+
 ps3alpha.plot <- aov(Simpson ~Plot, ps3alpha)
+
 anova(ps3alpha.plot)
 
-
-#Do a dunn's test when the anova is significant (aka the means are not equal)
+#### Do a dunn's test when the anova is significant (aka the means are not equal)
 library(dunn.test)
+
 dunn.test(ps3alpha$Observed, g = ps3alpha$Sample_Type, method = "bonferroni")
 
 dunn.test(ps3alpha$Shannon, g = ps3alpha$Sample_Type, method = "bonferroni")
 
 dunn.test(ps3alpha$Simpson, g = ps3alpha$Sample_Type, method = "bonferroni")
 
-
+### Soil samples alpha diversity
 #plot_richness(pssoil, x="Plot", measures = c("Shannon", "Simpson"), color = "SoilType", shape = "Season") 
+
 soilalpha <- estimate_richness(pssoil, measures = c("Observed","Shannon", "Simpson"))
+
 soilalpha$Plot <- sample_data(pssoil)$Plot
+
 soilalpha$SoilType <- sample_data(pssoil)$SoilType
+
 soilalpha$Season <- sample_data(pssoil)$Season
 
 ggplot(soilalpha, aes(x = Plot, y = Observed, color = Season)) + geom_boxplot()+ facet_grid(~SoilType, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 soilalpha.soiltype <- aov(Observed ~SoilType, soilalpha)
+
 anova(soilalpha.soiltype)
+
 soilalpha.season <- aov(Observed ~Season, soilalpha)
+
 anova(soilalpha.season)
+
 soilalpha.plot <- aov(Observed ~Plot, soilalpha)
+
 anova(soilalpha.plot)
 
 ggplot(soilalpha, aes(x = Plot, y = Shannon, color = Season)) + geom_boxplot()+ facet_grid(~SoilType, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 soilalpha.soiltype <- aov(Shannon ~SoilType, soilalpha)
+
 anova(soilalpha.soiltype)
+
 soilalpha.season <- aov(Shannon ~Season, soilalpha)
+
 anova(soilalpha.season)
+
 soilalpha.plot <- aov(Shannon ~Plot, soilalpha)
+
 anova(soilalpha.plot)
 
 ggplot(soilalpha, aes(x = Plot, y = Simpson, color = Season)) + geom_boxplot()+ facet_grid(~SoilType, scales = "free", space = "free" )
-#statistics
+
+#### statistics
 soilalpha.soiltype <- aov(Simpson ~SoilType, soilalpha)
+
 anova(soilalpha.soiltype)
+
 soilalpha.season <- aov(Simpson ~Season, soilalpha)
+
 anova(soilalpha.season)
+
 soilalpha.plot <- aov(Simpson ~Plot, soilalpha)
+
 anova(soilalpha.plot)
 
+### Cysts alpha diversity
 #plot_richness(pscyst, x="Plot", measures = c("Shannon", "Simpson"), color = "Season")
+
 cystalpha <- estimate_richness(pscyst,measures = c("Observed", "Shannon", "Simpson"))
+
 cystalpha$Plot <- sample_data(pscyst)$Plot
+
 cystalpha$Season <- sample_data(pscyst)$Season
 
 ggplot(cystalpha, aes(x= Plot, y = Observed, color = Season)) + geom_boxplot()
-#statistics
+
+#### statistics
 cystalpha.plot <- aov(Observed ~Plot, cystalpha)
+
 anova(cystalpha.plot)
+
 cystalpha.season <- aov(Observed ~Season, cystalpha)
+
 anova(cystalpha.season)
 
 ggplot(cystalpha, aes(x= Plot, y = Shannon, color = Season)) + geom_boxplot()
-#statistics
+
+#### statistics
 cystalpha.plot <- aov(Shannon ~Plot, cystalpha)
+
 anova(cystalpha.plot)
+
 cystalpha.season <- aov(Shannon ~Season, cystalpha)
+
 anova(cystalpha.season)
 
 ggplot(cystalpha, aes(x= Plot, y = Simpson, color = Season)) + geom_boxplot()
-#statistics
+
+#### statistics
 cystalpha.plot <- aov(Simpson ~Plot, cystalpha)
+
 anova(cystalpha.plot)
+
 cystalpha.season <- aov(Simpson ~Season, cystalpha)
+
 anova(cystalpha.season)
 
-
+### Root alpha diversity 
 #plot_richness(psroot, x="Plot", measures = c("Shannon", "Simpson"), color = "Season")
+
 rootalpha <- estimate_richness(psroot, measures = c("Observed", "Shannon", "Simpson"))
+
 rootalpha$Plot <- sample_data(psroot)$Plot
 
 ggplot(rootalpha, aes(x= Plot, y = Observed)) + geom_boxplot()
-#statistics
+
+#### statistics
 rootalpha.plot <- aov(Observed ~Plot, rootalpha)
+
 anova(rootalpha.plot)
+
 ggplot(rootalpha, aes(x= Plot, y = Shannon)) + geom_boxplot()
+
 rootalpha.plot <- aov(Shannon ~Plot, rootalpha)
+
 anova(rootalpha.plot)
+
 ggplot(rootalpha, aes(x= Plot, y = Simpson)) + geom_boxplot()
+
 rootalpha.plot <- aov(Simpson ~Plot, rootalpha)
+
 anova(rootalpha.plot)
 
 
-#Beta Diversity. Using Unifrac
-
+## Beta Diversity. Using Unifrac
 #Create new phyloseq object for adding phylogenetic tree
-#Certain downstream analyses won't work with a phylogenetic tree in the phyloseq object.
-#I just create a new phyloseq object for this reason. 
+
+#Certain downstream analyses won't work with a phylogenetic tree in the phyloseq object. I just create a new phyloseq object for this reason. 
 
 pssoil.t <- pssoil
+
 pscyst.t <- pscyst
+
 psroot.t <- psroot
+
 psrhiz.t <- psrhiz
+
 psbulk.t <- psbulk
 
 psbulkmid <- subset_samples(psbulk, Season == "Mid")
+
 psbulkmid.t <- psbulkmid
+
 psbulkfall <- subset_samples(psbulk, Season == "Fall")
+
 psbulkfall.t <- psbulkfall
 
 pscystmid <- subset_samples(pscyst, Season == "Mid")
+
 pscystmid.t <- pscystmid
+
 pscystfall <- subset_samples(pscyst, Season == "Fall")
+
 pscystfall.t <- pscystfall
 
 
-#Beta diversity- Unifrac Soil 
+## Beta diversity- Unifrac Soil 
 pssoil.t.tree <- rtree(ntaxa(pssoil.t), rooted = TRUE, tip.label = taxa_names(pssoil.t))
+
 #plot(pssoil.t.tree)
+
 pssoil.t <- merge_phyloseq(pssoil.t, pssoil.t.tree)
 
-#Unweighted Soil
+### Unweighted Soil
 pssoiltunifrac_dist <- phyloseq::distance(pssoil.t, method="unifrac", weighted=F)
+
 ordination = ordinate(pssoil.t, method="PCoA", distance=pssoiltunifrac_dist)
+
 plot_ordination(pssoil.t, ordination, color = "SoilType", shape = "Season", label = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pssoil.t, ordination, color = "Plot", shape = "SoilType", label = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pssoil.t.tree.data <- data.frame(sample_data(pssoil.t))
+
 adonis2(pssoiltunifrac_dist ~SoilType*Plot*Season, pssoil.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(pssoiltunifrac_dist, pssoil.t.tree.data$SoilType, p.adjust.m = "holm", perm = 9999)
+
 pairwiseAdonis::pairwise.adonis(pssoiltunifrac_dist, pssoil.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 pssoiltu.bdisper <- betadisper(pssoiltunifrac_dist, pssoil.t.tree.data$SoilType, "centroid", bias.adjust = TRUE)
+
 anova(pssoiltu.bdisper)
+
 permutest(pssoiltu.bdisper, pairwise = TRUE)
 
-#Weighted Soil
+### Weighted Soil
 pssoiltunifrac_dist <- phyloseq::distance(pssoil.t, method="unifrac", weighted=T)
+
 ordination = ordinate(pssoil.t, method="PCoA", distance=pssoiltunifrac_dist)
+
 plot_ordination(pssoil.t, ordination, color = "SoilType", shape = "Season", label = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pssoil.t, ordination, color = "Plot", shape = "SoilType", label = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pssoil.t.tree.data <- data.frame(sample_data(pssoil.t))
+
 adonis2(pssoiltunifrac_dist ~SoilType*Plot*Season, pssoil.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(pssoiltunifrac_dist, pssoil.t.tree.data$SoilType, p.adjust.m = "holm", perm = 9999)
+
 pairwiseAdonis::pairwise.adonis(pssoiltunifrac_dist, pssoil.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 pssoiltu.bdisper <- betadisper(pssoiltunifrac_dist, pssoil.t.tree.data$SoilType, "centroid", bias.adjust = TRUE)
+
 anova(pssoiltu.bdisper)
+
 permutest(pssoiltu.bdisper, pairwise = TRUE)
 
 
-
-#Beta diversity- Unifrac mid season soil ---- 
+## Beta diversity- Unifrac mid season soil  
 pssoil.mid <- subset_samples(pssoil, Season == "Mid")
+
 pssoil.mid.t <- pssoil.mid
 
 pssoil.mid.t.tree <- rtree(ntaxa(pssoil.mid.t), rooted = TRUE, tip.label = taxa_names(pssoil.mid.t))
+
 #plot(pssoil.mid.t.tree)
+
 pssoil.mid.t <- merge_phyloseq(pssoil.mid.t, pssoil.mid.t.tree)
 
-#Unweighted Soil
+### Unweighted Soil
 pssoil.midtunifrac_dist <- phyloseq::distance(pssoil.mid.t, method="unifrac", weighted=F)
+
 ordination = ordinate(pssoil.mid.t, method="PCoA", distance=pssoil.midtunifrac_dist)
+
 plot_ordination(pssoil.mid.t, ordination, color = "SoilType", shape = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pssoil.mid.t, ordination, color = "Plot", shape = "SoilType") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pssoil.mid.t.tree.data <- data.frame(sample_data(pssoil.mid.t))
+
 adonis2(pssoil.midtunifrac_dist ~SoilType*Plot, pssoil.mid.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(pssoil.midtunifrac_dist, pssoil.mid.t.tree.data$SoilType, p.adjust.m = "holm", perm = 9999)
+
 pairwiseAdonis::pairwise.adonis(pssoil.midtunifrac_dist, pssoil.mid.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 pssoiltmidu.bdisper <- betadisper(pssoil.midtunifrac_dist, pssoil.mid.t.tree.data$SoilType, "centroid", bias.adjust = TRUE)
+
 anova(pssoiltmidu.bdisper)
+
 permutest(pssoiltmidu.bdisper, pairwise = TRUE)
 
-#Weighted Soil
+### Weighted Soil
 pssoil.midtunifrac_dist <- phyloseq::distance(pssoil.mid.t, method="unifrac", weighted=T)
+
 ordination = ordinate(pssoil.mid.t, method="PCoA", distance=pssoil.midtunifrac_dist)
+
 plot_ordination(pssoil.mid.t, ordination, color = "SoilType", shape = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pssoil.mid.t, ordination, color = "Plot", shape = "SoilType") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pssoil.mid.t.tree.data <- data.frame(sample_data(pssoil.mid.t))
+
 adonis2(pssoil.midtunifrac_dist ~SoilType*Plot, pssoil.mid.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(pssoil.midtunifrac_dist, pssoil.mid.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 pssoiltmidu.bdisper <- betadisper(pssoil.midtunifrac_dist, pssoil.mid.t.tree.data$SoilType, "centroid", bias.adjust = TRUE)
+
 anova(pssoiltmidu.bdisper)
+
 permutest(pssoiltmidu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Rhizosphere ----
+## Beta diversity- Unifrac Rhizosphere 
 psrhiz.t.tree <- rtree(ntaxa(psrhiz.t), rooted = TRUE, tip.label = taxa_names(psrhiz.t))
+
 #plot(psrhiz.t.tree)
+
 psrhiz.t <- merge_phyloseq(psrhiz.t, psrhiz.t.tree)
 
-#Unweighted Rhizosphere
+### Unweighted Rhizosphere
 psrhiztunifrac_dist <- phyloseq::distance(psrhiz.t, method="unifrac", weighted=F)
+
 ordination = ordinate(psrhiz.t, method="PCoA", distance=psrhiztunifrac_dist)
+
 plot_ordination(psrhiz.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psrhiz.t.tree.data <- data.frame(sample_data(psrhiz.t))
+
 adonis2(psrhiztunifrac_dist ~Plot, psrhiz.t.tree.data)
 
-#beta dispersion
+##### beta dispersion
 psrhiztu.bdisper <- betadisper(psrhiztunifrac_dist, psrhiz.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psrhiztu.bdisper)
+
 permutest(psrhiztu.bdisper, pairwise = TRUE)
 
-#Weighted Rhizosphere
+### Weighted Rhizosphere
 psrhiztunifrac_dist <- phyloseq::distance(psrhiz.t, method="unifrac", weighted=T)
+
 ordination = ordinate(psrhiz.t, method="PCoA", distance=psrhiztunifrac_dist)
+
 plot_ordination(psrhiz.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psrhiz.t.tree.data <- data.frame(sample_data(psrhiz.t))
+
 adonis2(psrhiztunifrac_dist ~Plot, psrhiz.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psrhiztunifrac_dist, psrhiz.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 psrhiztu.bdisper <- betadisper(psrhiztunifrac_dist, psrhiz.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psrhiztu.bdisper)
+
 permutest(psrhiztu.bdisper, pairwise = TRUE)
 
 
-
-#Beta diversity- Unifrac Bulk 
+## Beta diversity- Unifrac Bulk 
 psbulk.t.tree <- rtree(ntaxa(psbulk.t), rooted = TRUE, tip.label = taxa_names(psbulk.t))
+
 #plot(psbulk.t.tree)
+
 psbulk.t <- merge_phyloseq(psbulk.t, psbulk.t.tree)
 
-#Unweighted Bulk
+### Unweighted Bulk
 psbulktunifrac_dist <- phyloseq::distance(psbulk.t, method="unifrac", weighted=F)
+
 ordination = ordinate(psbulk.t, method="PCoA", distance=psbulktunifrac_dist)
+
 plot_ordination(psbulk.t, ordination, color = "Plot", shape = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulk.t.tree.data <- data.frame(sample_data(psbulk.t))
+
 adonis2(psbulktunifrac_dist ~Plot*Season, psbulk.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulktunifrac_dist, psbulk.t.tree.data$Season, p.adjust.m = "holm", perm = 9999)
 
 pairwiseAdonis::pairwise.adonis(psbulktunifrac_dist, psbulk.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 psbulktu.bdisper <- betadisper(psbulktunifrac_dist, psbulk.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulktu.bdisper)
+
 permutest(psbulktu.bdisper, pairwise = TRUE)
 
-#Weighted Bulk
+### Weighted Bulk
 psbulktunifrac_dist <- phyloseq::distance(psbulk.t, method="unifrac", weighted=T)
+
 ordination = ordinate(psbulk.t, method="PCoA", distance=psbulktunifrac_dist)
+
 plot_ordination(psbulk.t, ordination, color = "Plot", shape = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulk.t.tree.data <- data.frame(sample_data(psbulk.t))
+
 adonis2(psbulktunifrac_dist ~Plot*Season, psbulk.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulktunifrac_dist, psbulk.t.tree.data$Season, p.adjust.m = "holm", perm = 9999)
 
 pairwiseAdonis::pairwise.adonis(psbulktunifrac_dist, psbulk.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#beta dispersion
+##### beta dispersion
 psbulktu.bdisper <- betadisper(psbulktunifrac_dist, psbulk.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulktu.bdisper)
+
 permutest(psbulktu.bdisper, pairwise = TRUE)
 
 
-
-#Beta diversity- Unifrac Bulk Mid season samples 
+## Beta diversity- Unifrac Bulk Mid season samples 
 psbulkmid.t.tree <- rtree(ntaxa(psbulkmid.t), rooted = TRUE, tip.label = taxa_names(psbulkmid.t))
+
 #plot(psbulkmid.t.tree)
+
 psbulkmid.t <- merge_phyloseq(psbulkmid.t, psbulkmid.t.tree)
 
-#Unweighted Bulk Mid
+### Unweighted Bulk Mid
 psbulkmidtunifrac_dist <- phyloseq::distance(psbulkmid.t, method="unifrac", weighted=F)
+
 ordination = ordinate(psbulkmid.t, method="PCoA", distance=psbulkmidtunifrac_dist)
+
 plot_ordination(psbulkmid.t, ordination, color = "Plot",) + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulkmid.t.tree.data <- data.frame(sample_data(psbulkmid.t))
+
 adonis2(psbulkmidtunifrac_dist ~Plot, psbulkmid.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulkmidtunifrac_dist, psbulkmid.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psbulkmidtu.bdisper <- betadisper(psbulkmidtunifrac_dist, psbulkmid.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulkmidtu.bdisper)
 permutest(psbulkmidtu.bdisper, pairwise = TRUE)
 
 
-#Weighted Bulk Mid
+## Weighted Bulk Mid
 psbulkmidtunifrac_dist <- phyloseq::distance(psbulkmid.t, method="unifrac", weighted=T)
+
 ordination = ordinate(psbulkmid.t, method="PCoA", distance=psbulkmidtunifrac_dist)
+
 plot_ordination(psbulkmid.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulkmid.t.tree.data <- data.frame(sample_data(psbulkmid.t))
+
 adonis2(psbulkmidtunifrac_dist ~Plot, psbulkmid.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulkmidtunifrac_dist, psbulkmid.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psbulkmidtu.bdisper <- betadisper(psbulkmidtunifrac_dist, psbulkmid.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulkmidtu.bdisper)
+
 permutest(psbulkmidtu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Bulk Fall season samples 
+## Beta diversity- Unifrac Bulk Fall season samples 
 psbulkfall.t.tree <- rtree(ntaxa(psbulkfall.t), rooted = TRUE, tip.label = taxa_names(psbulkfall.t))
+
 #plot(psbulkfall.t.tree)
+
 psbulkfall.t <- merge_phyloseq(psbulkfall.t, psbulkfall.t.tree)
 
-#Unweighted Bulk Fall
+### Unweighted Bulk Fall
 psbulkfalltunifrac_dist <- phyloseq::distance(psbulkfall.t, method="unifrac", weighted=F)
+
 ordination = ordinate(psbulkfall.t, method="PCoA", distance=psbulkfalltunifrac_dist)
+
 plot_ordination(psbulkfall.t, ordination, color = "Plot",) + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulkfall.t.tree.data <- data.frame(sample_data(psbulkfall.t))
+
 adonis2(psbulkfalltunifrac_dist ~Plot, psbulkfall.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulkfalltunifrac_dist, psbulkfall.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psbulkfalltu.bdisper <- betadisper(psbulkfalltunifrac_dist, psbulkfall.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulkfalltu.bdisper)
+
 permutest(psbulkfalltu.bdisper, pairwise = TRUE)
 
 
-#Weighted Bulk Fall
+### Weighted Bulk Fall
 psbulkfalltunifrac_dist <- phyloseq::distance(psbulkfall.t, method="unifrac", weighted=T)
+
 ordination = ordinate(psbulkfall.t, method="PCoA", distance=psbulkfalltunifrac_dist)
+
 plot_ordination(psbulkfall.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psbulkfall.t.tree.data <- data.frame(sample_data(psbulkfall.t))
+
 adonis2(psbulkfalltunifrac_dist ~Plot, psbulkfall.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psbulkfalltunifrac_dist, psbulkfall.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psbulkfalltu.bdisper <- betadisper(psbulkfalltunifrac_dist, psbulkfall.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psbulkfalltu.bdisper)
+
 permutest(psbulkfalltu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Cyst 
+## Beta diversity- Unifrac Cyst 
 pscyst.t.tree <- rtree(ntaxa(pscyst.t), rooted = TRUE, tip.label = taxa_names(pscyst.t))
+
 #plot(pscyst.t.tree)
+
 pscyst.t <- merge_phyloseq(pscyst.t, pscyst.t.tree)
 
-#Unweighted
+### Unweighted
 pscysttunifrac_dist <- phyloseq::distance(pscyst.t, method="unifrac", weighted=F)
+
 ordination = ordinate(pscyst.t, method="PCoA", distance=pscysttunifrac_dist)
+
 #plot_ordination(pscyst.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscyst.t, ordination, color = "Plot", shape = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscyst.t.tree.data <- data.frame(sample_data(pscyst.t))
+
 adonis2(pscysttunifrac_dist ~Plot*Season*Num_Cysts, pscyst.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(pscysttunifrac_dist, pscyst.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 pscysttu.bdisper <- betadisper(pscysttunifrac_dist, pscyst.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscysttu.bdisper)
+
 permutest(pscysttu.bdisper, pairwise = TRUE)
 
-
-#Weighted
+## Weighted
 pscysttunifrac_dist <- phyloseq::distance(pscyst.t, method="unifrac", weighted=T)
+
 ordination = ordinate(pscyst.t, method="PCoA", distance=pscysttunifrac_dist)
+
 #plot_ordination(pscyst.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscyst.t, ordination, color = "Plot", shape = "Season") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscyst.t.tree.data <- data.frame(sample_data(pscyst.t))
+
 adonis2(pscysttunifrac_dist ~Plot*Season*Num_Cysts, pscyst.t.tree.data)
 
-#betadispersion
+##### betadispersion
 pscysttu.bdisper <- betadisper(pscysttunifrac_dist, pscyst.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscysttu.bdisper)
+
 permutest(pscysttu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Cysts mid season samples 
+## Beta diversity- Unifrac Cysts mid season samples 
 pscystmid.t.tree <- rtree(ntaxa(pscystmid.t), rooted = TRUE, tip.label = taxa_names(pscystmid.t))
+
 #plot(pscystmid.t.tree)
+
 pscystmid.t <- merge_phyloseq(pscystmid.t, pscystmid.t.tree)
 
-#Unweighted Cysts mid
+### Unweighted Cysts mid
 pscystmidtunifrac_dist <- phyloseq::distance(pscystmid.t, method="unifrac", weighted=F)
+
 ordination = ordinate(pscystmid.t, method="PCoA", distance=pscystmidtunifrac_dist)
+
 #plot_ordination(pscystmid.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscystmid.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscystmid.t.tree.data <- data.frame(sample_data(pscystmid.t))
+
 adonis2(pscystmidtunifrac_dist ~Plot*Num_Cysts, pscystmid.t.tree.data)
 
-#betadispersion
+##### betadispersion
 pscystmidtu.bdisper <- betadisper(pscystmidtunifrac_dist, pscystmid.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscystmidtu.bdisper)
+
 permutest(pscystmidtu.bdisper, pairwise = TRUE)
 
-
-#Weighted Cysts mid
+## Weighted Cysts mid
 pscystmidtunifrac_dist <- phyloseq::distance(pscystmid.t, method="unifrac", weighted=T)
+
 ordination = ordinate(pscystmid.t, method="PCoA", distance=pscystmidtunifrac_dist)
+
 #plot_ordination(pscystmid.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscystmid.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscystmid.t.tree.data <- data.frame(sample_data(pscystmid.t))
+
 adonis2(pscystmidtunifrac_dist ~Plot*Num_Cysts, pscystmid.t.tree.data)
 
-#betadispersion
+##### betadispersion
 pscystmidtu.bdisper <- betadisper(pscystmidtunifrac_dist, pscystmid.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscystmidtu.bdisper)
+
 permutest(pscystmidtu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Cysts fall season samples 
+## Beta diversity- Unifrac Cysts fall season samples 
 pscystfall.t.tree <- rtree(ntaxa(pscystfall.t), rooted = TRUE, tip.label = taxa_names(pscystfall.t))
+
 #plot(pscystfall.t.tree)
+
 pscystfall.t <- merge_phyloseq(pscystfall.t, pscystfall.t.tree)
 
-#Unweighted Cysts Fall
+### Unweighted Cysts Fall
 pscystfalltunifrac_dist <- phyloseq::distance(pscystfall.t, method="unifrac", weighted=F)
+
 ordination = ordinate(pscystfall.t, method="PCoA", distance=pscystfalltunifrac_dist)
+
 #plot_ordination(pscystfall.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscystfall.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscystfall.t.tree.data <- data.frame(sample_data(pscystfall.t))
+
 adonis2(pscystfalltunifrac_dist ~Plot, pscystfall.t.tree.data)
 
-#betadispersion
+##### betadispersion
 pscystfalltu.bdisper <- betadisper(pscystfalltunifrac_dist, pscystfall.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscystfalltu.bdisper)
+
 permutest(pscystfalltu.bdisper, pairwise = TRUE)
 
 
-#Weighted Cysts Fall
+## Weighted Cysts Fall
 pscystfalltunifrac_dist <- phyloseq::distance(pscystfall.t, method="unifrac", weighted=T)
+
 ordination = ordinate(pscystfall.t, method="PCoA", distance=pscystfalltunifrac_dist)
+
 #plot_ordination(pscystfall.t, ordination, color = "Plot", shape = "Season", label = "Num_Cysts") + theme(aspect.ratio=1) + geom_point(size=2)
+
 plot_ordination(pscystfall.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 pscystfall.t.tree.data <- data.frame(sample_data(pscystfall.t))
+
 adonis2(pscystfalltunifrac_dist ~Plot, pscystfall.t.tree.data)
 
-#betadispersion
+##### betadispersion
 pscystfalltu.bdisper <- betadisper(pscystfalltunifrac_dist, pscystfall.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(pscystfalltu.bdisper)
+
 permutest(pscystfalltu.bdisper, pairwise = TRUE)
 
 
-#Beta diversity- Unifrac Roots 
+## Beta diversity- Unifrac Roots 
 psroot.t.tree <- rtree(ntaxa(psroot.t), rooted = TRUE, tip.label = taxa_names(psroot.t))
+
 #plot(psroot.t.tree)
+
 psroot.t <- merge_phyloseq(psroot.t, psroot.t.tree)
 
-#Unweighted Root
+### Unweighted Root
 psroottunifrac_dist <- phyloseq::distance(psroot.t, method="unifrac", weighted=F)
+
 ordination = ordinate(psroot.t, method="PCoA", distance=psroottunifrac_dist)
+
 plot_ordination(psroot.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psroot.t.tree.data <- data.frame(sample_data(psroot.t))
+
 adonis2(psroottunifrac_dist ~Plot, psroot.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psroottunifrac_dist, psroot.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psroottu.bdisper <- betadisper(psroottunifrac_dist, psroot.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psroottu.bdisper)
+
 permutest(psroottu.bdisper, pairwise = TRUE)
 
-
-#Weighted Root
+### Weighted Root
 psroottunifrac_dist <- phyloseq::distance(psroot.t, method="unifrac", weighted=T)
+
 ordination = ordinate(psroot.t, method="PCoA", distance=psroottunifrac_dist)
+
 plot_ordination(psroot.t, ordination, color = "Plot") + theme(aspect.ratio=1) + geom_point(size=2)
 
-#statistics
-#permanova
+#### statistics
+##### permanova
 psroot.t.tree.data <- data.frame(sample_data(psroot.t))
+
 adonis2(psroottunifrac_dist ~Plot, psroot.t.tree.data)
 
-#permanova posthoc
+##### permanova posthoc
 pairwiseAdonis::pairwise.adonis(psroottunifrac_dist, psroot.t.tree.data$Plot, p.adjust.m = "holm", perm = 9999)
 
-#betadispersion
+##### betadispersion
 psroottu.bdisper <- betadisper(psroottunifrac_dist, psroot.t.tree.data$Plot, "centroid", bias.adjust = TRUE)
+
 anova(psroottu.bdisper)
+
 permutest(psroottu.bdisper, pairwise = TRUE)
 
 
